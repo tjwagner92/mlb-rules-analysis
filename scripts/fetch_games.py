@@ -1,3 +1,7 @@
+# Use the statsapi MLB API wrapper to get the scheduled games from
+# 2022 and 2023 seasons, extracting only necessary data and 
+# converting to a dataframe
+
 import statsapi
 import pandas as pd
 import os

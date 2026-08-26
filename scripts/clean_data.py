@@ -1,3 +1,6 @@
+# Prepare the raw data be analyzed by getting year and total, as well
+# as ensuring data quality for all variables
+
 import pandas as pd
 import os
 
