@@ -21,14 +21,27 @@ def fetch_games(start_date, end_date):
     return games
 
 if __name__ == "__main__":
-    games = fetch_games('01/01/2022', '12/31/2023')
-    print(f"Fetched {len(games)} games")
+    games_2022 = fetch_games('01/01/2022', '12/31/2022')
+    games_2023 = fetch_games('01/01/2023', '12/31/2023')
+    print(f"Fetched {len(games_2022)} games in 2022")
+    print(f"Fetched {len(games_2023)} games in 2023")
 
-    reg_season_games = [game for game in games if game['game_type'] =='R']
-    print(f"Fetched {len(reg_season_games)} regular season games")
+    reg_season_games_2022 = [game for game in games_2022 
+                             if game['game_type'] =='R' and
+                             (game['status'].startswith('Final') or
+                              game['status'].startswith('Completed Early'))]
+    print(f"Fetched {len(reg_season_games_2022)} complete, regular season games in 2022")
+    reg_season_games_2023 = [game for game in games_2023 
+                             if game['game_type'] =='R' and
+                             (game['status'].startswith('Final') or
+                              game['status'].startswith('Completed Early'))]
+    print(f"Fetched {len(reg_season_games_2023)} complete, regular season games in 2023")
+
+    reg_season_games = reg_season_games_2022 + reg_season_games_2023
 
     cleaned_games = [
         {
+            'game_id': game['game_id'],
             'date': game['game_date'],
             'home_team': game['home_name'],
             'away_team': game['away_name'],
@@ -44,6 +57,8 @@ if __name__ == "__main__":
           f"{sample_game['home_team']}:{sample_game['home_score']}")
 
     df = pd.DataFrame(cleaned_games)
+    df = df.drop_duplicates(subset=['game_id'], keep='first')
+
     data_path = 'data/games.csv'
     full_path = os.path.abspath(data_path)
     df.to_csv(data_path, index=False)
