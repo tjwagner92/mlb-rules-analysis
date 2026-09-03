@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, levene, mannwhitneyu
 import matplotlib.pyplot as plt
 
 def summary_statistics(df):
@@ -89,13 +89,46 @@ def create_visualizations(df):
     plt.savefig('results/analysis.png')
     plt.show()
 
+def run_stats(df):
+    df = df.copy()
+    """
+    Run simple stats tests
+    
+    Args:
+        df: dataframe of cleaned MLB games
+    
+    Returns:
+        Assumption checks and ttest results
+    """
+
+    # Separate samples
+    runs_2022 = df[df['year'] == 2022]['total_score']
+    runs_2023 = df[df['year'] == 2023]['total_score']
+
+    # Test equal variance
+    stat, p_value = levene(runs_2022, runs_2023)
+    print(f"Levene's test p-value: {p_value:.4f}")
+    if p_value > 0.05:
+        print("✓ Equal variances assumption holds")
+        t_stat, p_value = ttest_ind(runs_2022, runs_2023, equal_var=True)
+        print("t-test:")
+        print(f"    T-statistic: {t_stat:.4f}")
+        print(f"    P-value: {p_value:.2e}")
+    else:
+        print("✗ Unequal variances - use Welch's t-test instead")
+        t_stat, p_value = ttest_ind(runs_2022, runs_2023, equal_var=False)
+        print("t-test:")
+        print(f"    T-statistic: {t_stat:.4f}")
+        print(f"    P-value: {p_value:.2e}")
+
+    # Non-parametric test (doesn't assume normality)
+    stat, p_value = mannwhitneyu(runs_2022, runs_2023, alternative='two-sided')
+    print(f"Mann-Whitney U test:")
+    print(f"    U-statistic: {stat:.2f}")
+    print(f"    P-value: {p_value:.2e}")
+
 if __name__ == "__main__":
     df = pd.read_csv('data/games_clean.csv')
     print(summary_statistics(df))
     create_visualizations(df)
-    runs_2022 = df[df['year'] == 2022]['total_score']
-    runs_2023 = df[df['year'] == 2023]['total_score']
-
-    t_stat, p_value = ttest_ind(runs_2022, runs_2023)
-    print(f"T-statistic: {t_stat:.4f}")
-    print(f"P-value: {p_value:.2e}")
+    run_stats(df)
